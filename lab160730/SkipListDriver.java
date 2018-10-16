@@ -65,6 +65,15 @@ public class SkipListDriver {
                         returnValue = 1L;
                     }
                     break;
+                case "Print":
+                    Iterator<Long> it = skipList.iterator();
+                    String all = "[";
+                    while(it.hasNext())
+                        all += it.next() + ", ";
+                    all = all.substring(0,all.length()-2) + "]";
+                    System.out.println(all);
+                    returnValue =1L;
+                    break;
             }
             if (returnValue != null) {
                 result += returnValue;
