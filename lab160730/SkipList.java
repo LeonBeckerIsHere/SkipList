@@ -39,7 +39,7 @@ public class SkipList<T extends Comparable<? super T>> {
     public SkipList() {
         head = new Entry<>(null, PossibleLevels);
         tail = new Entry<>(null, PossibleLevels);
-
+        head.next[32] = tail;
         size = 0;
         maxLevel = 1;
         last = new Entry[33];
@@ -48,17 +48,13 @@ public class SkipList<T extends Comparable<? super T>> {
 
     //Helper function
     private void find(T x){
-        Entry<T> ptr;
+        Entry<T> ptr = head;
 
         //Iterate through each level
         for(int i = (maxLevel-1); i >= 0; i--){
-            ptr = head.next[i];
-            while(ptr.next[0].element != null && ptr.element.compareTo(x) < 0){
-                System.out.println("Wahh");
+            while(ptr.next[i] != null && ptr.next[i].element != null && ((T)ptr.next[i].element).compareTo(x) < 0){
                 ptr = ptr.next[i];
             }
-            System.out.println(i);
-            System.out.println(ptr.element);
             last[i] = ptr;
         }
     }
@@ -76,29 +72,27 @@ public class SkipList<T extends Comparable<? super T>> {
     // Add x to list. If x already exists, reject it. Returns true if new node is added to list
     public boolean add(T x) {
 
-        //If the list is empty assign x to be the next immediate value of head aka next[0]
-        if(isEmpty()){
-            head.next[0] = new Entry<>(x, 1);
-
-            //Set the new element's next element to be the tail
-            head.next[0].next[0] = tail;
-
-            //Increment size
-            size++;
-            return true;
-        }
-
         //No duplicates
         if(contains(x)) return false;
 
         int level = chooseLevel();
-        System.out.println(level);
+
+        if(isEmpty()){
+            head.next[0] = new Entry(x, level);
+            head.next[0].prev = head;
+            head.next[0].next[0] = tail;
+            tail.prev = head.next[0];
+            size++;
+            return true;
+        }
+
         Entry<T> ent = new Entry<>(x, level);
 
         for(int i = 0; i < level; i++){
             if(last[i] != null) {
                 ent.next[i] = last[i].next[i];
                 last[i].next[i] = ent;
+                ent.prev = last[i];
             }
         }
 
@@ -159,7 +153,7 @@ public class SkipList<T extends Comparable<? super T>> {
 
     // Return last element of list
     public T last() {
-        return null;
+        return (T)tail.prev.element;
     }
 
     // Remove x from list.  Removed element is returned. Return null if x not in list
@@ -168,6 +162,8 @@ public class SkipList<T extends Comparable<? super T>> {
         Entry<T> ent = last[0].next[0];
         for(int i=0; i < ent.next.length; i++){
             last[i].next[i] = ent.next[i];
+            if(ent.next[i] != null)
+                ent.next[i].prev = last[i];
         }
         size--;
         return ent.element;
