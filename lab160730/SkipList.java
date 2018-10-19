@@ -56,9 +56,14 @@ public class SkipList<T extends Comparable<? super T>> {
 
     // Constructor
     public SkipList() {
+        //create dummy head and tail
         head = new Entry<>(null, PossibleLevels);
         tail = new Entry<>(null, PossibleLevels);
+
+        //Highest possible level of head should point to tail
         head.next[32] = tail;
+
+        //Set other initial variables
         size = 0;
         maxLevel = 1;
         last = new Entry[33];
@@ -66,25 +71,37 @@ public class SkipList<T extends Comparable<? super T>> {
     }
 
     //Helper function
+    //Pre: last is either empty or holds values from a previous find
+    //Post: last contains the path that leads to where x is or where x would go
     private void find(T x){
         Entry<T> ptr = head;
 
         //Iterate through each level
         for(int i = (maxLevel-1); i >= 0; i--){
+            //Check for null values as not all entries have the same number of levels
+            //Then check if the next entry element is less than x, if it then set the ptr equal to the next entry
             while(ptr.next[i] != null && ptr.next[i].element != null && ((T)ptr.next[i].element).compareTo(x) < 0){
                 ptr = ptr.next[i];
             }
+
+            //Add ptr to at last[i] to keep track of the path taken to find x
             last[i] = ptr;
         }
     }
 
-    //Helper function
-    int chooseLevel(){
 
+    //Helper function
+    //Randomly chooses a level to provide a normal distribution of levels across the skip list
+    int chooseLevel(){
+        //Sleek method provided by Dr. Raghavachari
         int level = 1 +Integer.numberOfTrailingZeros(random.nextInt());
+
+        //ensures that the levels slowly propagate as entries are ended
         level = Math.min(level, maxLevel+1);
+
         if(level > maxLevel)
             maxLevel = level;
+
         return level;
     }
 
@@ -94,8 +111,10 @@ public class SkipList<T extends Comparable<? super T>> {
         //No duplicates
         if(contains(x)) return false;
 
+        //Randomly choose level of new entry
         int level = chooseLevel();
 
+        //If the list is empty then initialize it properly
         if(isEmpty()){
             head.next[0] = new Entry(x, level);
             head.next[0].prev = head;
